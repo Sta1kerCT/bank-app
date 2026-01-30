@@ -40,7 +40,7 @@ services:
     ports:
       - "8000:8000"
     environment:
-      DATABASE_URL: postgresql://bank_user:bank_password@postgres:5432/bank_db
+      DATABASE_URL: postgresql+asyncpg://bank_user:bank_password@postgres:5432/bank_db
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
     depends_on:
       postgres:
@@ -52,10 +52,14 @@ services:
     build: ./consumer
     environment:
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
-      DATABASE_URL: postgresql://bank_user:bank_password@postgres:5432/bank_db
+      DATABASE_URL: postgresql+asyncpg://bank_user:bank_password@postgres:5432/bank_db
     depends_on:
-      - server
-      - kafka
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+      server:
+        condition: service_started
 
   prometheus:
     image: prom/prometheus

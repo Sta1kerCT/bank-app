@@ -9,6 +9,11 @@ services:
       POSTGRES_DB: test_db
     ports:
       - 5432:5432
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U test_user"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   zookeeper-test:
     image: confluentinc/cp-zookeeper:7.4.0
@@ -25,7 +30,38 @@ services:
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper-test:2181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-test:9092
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
     ports:
       - 9092:9092
+
+  kafka-setup:
+    image: confluentinc/cp-kafka:7.4.0
+    depends_on:
+      - kafka-test
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - "sleep 15 && kafka-topics --bootstrap-server kafka-test:9092 --create --if-not-exists --topic bank-transactions --replication-factor 1 && echo Done"
+
+  server-test:
+    build: ./server
+    ports:
+      - "8001:8000"
+    environment:
+      DATABASE_URL: postgresql+asyncpg://test_user:test_password@postgres-test:5432/test_db
+      KAFKA_BOOTSTRAP_SERVERS: kafka-test:9092
+    depends_on:
+      postgres-test:
+        condition: service_healthy
+      kafka-setup:
+        condition: service_completed_successfully
+
+  consumer-test:
+    build: ./consumer
+    environment:
+      DATABASE_URL: postgresql+asyncpg://test_user:test_password@postgres-test:5432/test_db
+      KAFKA_BOOTSTRAP_SERVERS: kafka-test:9092
+    depends_on:
+      - postgres-test
+      - kafka-setup
+      - server-test

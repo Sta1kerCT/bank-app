@@ -7,7 +7,6 @@ import pytest
 import asyncio
 from typing import Generator, AsyncGenerator
 
-# Общие фикстуры для всех тестов
 @pytest.fixture
 def sample_account_data():
     """Sample account data for tests"""
@@ -25,7 +24,6 @@ def sample_transaction_data():
         "transaction_type": "DEPOSIT"
     }
 
-# Фикстура для event loop (для async тестов)
 @pytest.fixture(scope="session")
 def event_loop() -> Generator[asyncio.AbstractEventLoop, None, None]:
     """Create event loop for async tests"""
@@ -33,7 +31,6 @@ def event_loop() -> Generator[asyncio.AbstractEventLoop, None, None]:
     yield loop
     loop.close()
 
-# Общие константы для тестов
 TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
 TEST_KAFKA_BROKER = "localhost:9092"
 

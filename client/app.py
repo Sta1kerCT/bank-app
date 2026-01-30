@@ -136,7 +136,7 @@ class BankClient:
         url = f"{self.base_url}/transactions/"
         data = {
             "from_account": from_account,
-            "to_account": from_account,  # Для вывода на тот же счет
+            "to_account": from_account,
             "amount": float(amount),
             "transaction_type": "WITHDRAW"
         }
@@ -403,7 +403,7 @@ def demo(ctx):
 
     # 6. Финальные балансы
     console.print(f"\n[bold]6. Финальные балансы:[/bold]")
-    time.sleep(3)  # Даем время на обработку транзакций
+    time.sleep(3)
     client.get_account(acc1_num)
     client.get_account(acc2_num)
 

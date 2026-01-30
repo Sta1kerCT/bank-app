@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from contextlib import asynccontextmanager
 from .models.database import init_db
 from .api import accounts, transactions
@@ -18,17 +18,14 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Bank API", lifespan=lifespan)
 
-# Add Prometheus middleware
 app.add_middleware(PrometheusMiddleware)
 
-# Include routers
 app.include_router(accounts.router, prefix="/accounts", tags=["accounts"])
 app.include_router(transactions.router, prefix="/transactions", tags=["transactions"])
 
-# Add metrics endpoint
 @app.get("/metrics")
-async def metrics():
-    return metrics_endpoint
+async def metrics(request: Request):
+    return metrics_endpoint(request)
 
 @app.get("/")
 async def root():
